@@ -1,6 +1,6 @@
 ﻿namespace ecommerce_api.Servicios
 {
-    public class LocalFileStorage
+    public class LocalFileStorage: ILocalFileStorage
     {
         private readonly IWebHostEnvironment env;
         private readonly IHttpContextAccessor httpContextAccessor;
