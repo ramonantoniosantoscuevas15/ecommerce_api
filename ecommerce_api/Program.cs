@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,11 +8,15 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
-var origenesPermitidos = builder.Configuration.GetValue<string>("origenesPermitidos")!.Split(",");
+var origenesPermitidos = builder.Configuration.GetValue<string>("origenesPermitidos")!.Split(",https://localhost:5000");
+//var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(opciones => {
-    opciones.AddDefaultPolicy(configuracion =>
-    {
-        configuracion.WithOrigins(origenesPermitidos).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+    opciones.AddDefaultPolicy( configuracion=>
+    {   //por si no funciona origenes permitidos prueba este
+        //configuracion.WithOrigins("http://localhost:4200",
+        //    "https://localhost:5000"
+        //    ).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+        configuracion.WithOrigins(origenesPermitidos).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
 
     });
     opciones.AddPolicy("libre", configuracion =>
