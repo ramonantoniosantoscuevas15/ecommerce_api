@@ -8,7 +8,7 @@ namespace ecommerce_api.Entidades
         public required string Descripcion { get; set; }
         public decimal Precio { get; set; }
         [Unicode(false)]
-        public required string FotoUrl { get; set; }
+        public required string FotoUrl { get; set; } 
         public required string Marca { get; set; }
     }
 }
