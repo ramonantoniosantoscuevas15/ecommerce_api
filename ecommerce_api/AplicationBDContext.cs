@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using ecommerce_api.Entidades;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ecommerce_api
@@ -17,5 +18,6 @@ namespace ecommerce_api
 
 
         }
+        public DbSet<Categorie> Categories { get; set; }
     }
 }

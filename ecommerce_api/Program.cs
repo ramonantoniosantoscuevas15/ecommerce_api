@@ -1,3 +1,7 @@
+using ecommerce_api;
+using ecommerce_api.Interfaces;
+using ecommerce_api.Repositorios;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +12,11 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<AplicationBDContext>(opciones =>
+{
+    opciones.UseSqlServer(builder.Configuration.GetConnectionString("defaultConnection"));
+});
+builder.Services.AddScoped<ICategorie, CategoryRepository>();
 var origenesPermitidos = builder.Configuration.GetValue<string>("origenesPermitidos")!.Split(",https://localhost:5000");
 //var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(opciones => {
