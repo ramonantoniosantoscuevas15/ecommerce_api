@@ -9,7 +9,8 @@ namespace ecommerce_api.Interfaces
         void Add(T entity);
         void Update(T entity);
         void Remove(T entity);
-        Task<bool> SaveChangesAsync();
+        Task<bool> SaveAllAsync();
+        bool Exists(int id);
 
     }
 }
