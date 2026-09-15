@@ -1,6 +1,9 @@
-﻿namespace ecommerce_api.Interfaces
+﻿using System.Linq.Expressions;
+
+namespace ecommerce_api.Interfaces
 {
-    public interface ISpecification
+    public interface ISpecification<T>
     {
+        Expression<Func<T, bool>> Criteria { get; }
     }
 }

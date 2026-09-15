@@ -1,6 +1,12 @@
-﻿namespace ecommerce_api.Specifications
+﻿using ecommerce_api.Interfaces;
+using System.Linq.Expressions;
+
+namespace ecommerce_api.Specifications
 {
-    public class BaseSpecification
+    public class BaseSpecification<T>(Expression<Func<T, bool>> criteria) : ISpecification<T>
     {
+        
+
+        public Expression<Func<T, bool>> Criteria => criteria;
     }
 }
