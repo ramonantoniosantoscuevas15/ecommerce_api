@@ -31,6 +31,11 @@ namespace ecommerce_api.Repositorios
             context.Set<T>().Remove(entity);
         }
 
+        public async Task<bool> SaveAllAsync()
+        {
+            return await context.SaveChangesAsync() > 0;
+        }
+
         public async Task<bool> SaveChangesAsync()
         {
             return await context.SaveChangesAsync() > 0;

@@ -45,6 +45,18 @@ namespace ecommerce_api.Controllers
             }
             return BadRequest("Problemas Actualizando esta categoria");
         }
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult> DeleteCategory(int id)
+        {
+            var category = await repo.GetByIdAsync(id);
+            if (category == null) return NotFound();
+            repo.Remove(category);
+            if(await repo.SaveAllAsync())
+            {
+                return NoContent();
+            }
+            return BadRequest("Problemas al Eliminar la Categoria");
+        }
         private bool CategoryExists(int id)
         {
             return repo.Exists(id);
