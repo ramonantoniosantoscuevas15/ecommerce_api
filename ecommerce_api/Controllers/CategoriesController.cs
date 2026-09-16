@@ -1,5 +1,6 @@
 ﻿using ecommerce_api.Entidades;
 using ecommerce_api.Interfaces;
+using ecommerce_api.Specifications;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ecommerce_api.Controllers
@@ -11,7 +12,9 @@ namespace ecommerce_api.Controllers
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<Categorie>>> GetCategories(string? name)
         {
-            return Ok(await repo.ListAllAsync());
+            var spec = new CategorySpecification(name);
+            var category = await repo.ListAsync(spec);
+            return Ok(category);
 
         }
         [HttpGet("{id:int}")]
