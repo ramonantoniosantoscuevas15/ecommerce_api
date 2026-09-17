@@ -1,6 +1,7 @@
 using ecommerce_api;
 using ecommerce_api.Interfaces;
 using ecommerce_api.Repositorios;
+using ecommerce_api.Servicios;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -17,6 +18,8 @@ builder.Services.AddDbContext<AplicationBDContext>(opciones =>
     opciones.UseSqlServer(builder.Configuration.GetConnectionString("defaultConnection"));
 });
 builder.Services.AddScoped<ICategorie, CategoryRepository>();
+builder.Services.AddTransient<ILocalFileStorage, LocalFileStorage>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 var origenesPermitidos = builder.Configuration.GetValue<string>("origenesPermitidos")!.Split(",https://localhost:5000");
 //var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -46,6 +49,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 app.UseAuthorization();
 app.UseCors();
