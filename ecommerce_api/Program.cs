@@ -18,6 +18,7 @@ builder.Services.AddDbContext<AplicationBDContext>(opciones =>
     opciones.UseSqlServer(builder.Configuration.GetConnectionString("defaultConnection"));
 });
 builder.Services.AddScoped<ICategorie, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddTransient<ILocalFileStorage, LocalFileStorage>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));

@@ -19,5 +19,6 @@ namespace ecommerce_api
 
         }
         public DbSet<Categorie> Categories { get; set; }
+        public DbSet<Product> Products { get; set; }
     }
 }
