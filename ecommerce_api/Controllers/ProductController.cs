@@ -34,7 +34,14 @@ namespace ecommerce_api.Controllers
             return BadRequest("Problemas al Crear el Producto");
 
         }
-             
+        [HttpPut("{id:int}")]
+
+
+        private bool ProductExists(int id)
+        {
+            return repo.ProductExists(id);
+        }
+
 
 
     }
