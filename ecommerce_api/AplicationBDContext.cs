@@ -1,4 +1,5 @@
-﻿using ecommerce_api.Entidades;
+﻿using ecommerce_api.Config;
+using ecommerce_api.Entidades;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,8 @@ namespace ecommerce_api
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProductConfiguration).Assembly);
+
 
 
 
