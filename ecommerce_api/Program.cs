@@ -13,6 +13,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddDbContext<AplicationBDContext>(opciones =>
 {
     opciones.UseSqlServer(builder.Configuration.GetConnectionString("defaultConnection"));
@@ -37,6 +38,10 @@ builder.Services.AddCors(opciones => {
     {
         configuracion.WithOrigins(origenesPermitidos).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
     });
+});
+builder.Services.AddOutputCache(opciones =>
+{
+    opciones.DefaultExpirationTimeSpan = TimeSpan.FromSeconds(60);
 });
 
 var app = builder.Build();
