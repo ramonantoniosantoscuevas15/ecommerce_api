@@ -74,6 +74,46 @@ namespace ecommerce_api.Controllers
             await outputCacheStore.EvictByTagAsync(cacheTag,default);
             return NoContent();
         }
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var deleteproduct = await context.Products.Where(p => p.Id == id).ExecuteDeleteAsync();
+            if(deleteproduct == 0)
+            {
+                return NotFound();
+            }
+            
+            await outputCacheStore.EvictByTagAsync(cacheTag,default);
+            return NoContent();
+
+        }
+        [HttpGet("Type")]
+        public async Task<ActionResult<List<string>>> GetTypes()
+        {
+            return await context.Products.Select(p => p.Type).Distinct().ToListAsync();
+        }
+        [HttpGet("Brand")]
+        public async Task<ActionResult<List<string>>> GetBrands()
+        {
+            return await context.Products.Select(p => p.Brand).Distinct().ToListAsync();
+        }
+
+        [HttpGet("Filter")]
+        [OutputCache(Tags = [cacheTag])]
+        public async Task<IReadOnlyList<Product>> GetProducts([FromQuery] string? brand,string? type)
+        {
+            var queryable = context.Products.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(brand))
+            
+                queryable = queryable.Where(p => p.Brand == brand);
+            if (!string.IsNullOrWhiteSpace(type))
+                queryable = queryable.Where(p => p.Type == type);
+
+            return await queryable.ToListAsync();
+
+        }
+
 
 
 
