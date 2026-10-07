@@ -100,7 +100,7 @@ namespace ecommerce_api.Controllers
 
         [HttpGet("Filter")]
         [OutputCache(Tags = [cacheTag])]
-        public async Task<IReadOnlyList<Product>> GetProducts([FromQuery] string? brand,string? type)
+        public async Task<IReadOnlyList<Product>> GetProducts([FromQuery] string? brand,string? type,string? sort)
         {
             var queryable = context.Products.AsQueryable();
 
@@ -109,6 +109,16 @@ namespace ecommerce_api.Controllers
                 queryable = queryable.Where(p => p.Brand == brand);
             if (!string.IsNullOrWhiteSpace(type))
                 queryable = queryable.Where(p => p.Type == type);
+            
+                queryable = sort switch
+                {
+                    "priceAsc" => queryable.OrderBy(p => p.Price),
+                    "priceDesc" => queryable.OrderByDescending(p => p.Price),
+                    _ => queryable.OrderBy(p => p.Name)
+
+                };
+
+            
 
             return await queryable.ToListAsync();
 
