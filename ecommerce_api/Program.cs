@@ -31,7 +31,7 @@ builder.Services.AddCors(opciones => {
         //configuracion.WithOrigins("http://localhost:4200",
         //    "https://localhost:5000"
         //    ).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
-        configuracion.WithOrigins(origenesPermitidos).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+        configuracion.WithOrigins(origenesPermitidos).AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithExposedHeaders("cantidadTotalRegistros");
 
     });
     opciones.AddPolicy("libre", configuracion =>

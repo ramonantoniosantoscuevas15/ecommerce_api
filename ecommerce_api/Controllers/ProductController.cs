@@ -4,9 +4,11 @@ using ecommerce_api.DTOs;
 using ecommerce_api.Entidades;
 using ecommerce_api.Interfaces;
 using ecommerce_api.Servicios;
+using ecommerce_api.Utilidades;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace ecommerce_api.Controllers
 {
@@ -97,32 +99,64 @@ namespace ecommerce_api.Controllers
         {
             return await context.Products.Select(p => p.Brand).Distinct().ToListAsync();
         }
-
         [HttpGet("Filter")]
         [OutputCache(Tags = [cacheTag])]
-        public async Task<IReadOnlyList<Product>> GetProducts([FromQuery] string? brand,string? type,string? sort)
+        public async Task<List<ProductDto>>Filter([FromQuery] ProductFilterDto productFilterDto)
         {
-            var queryable = context.Products.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(brand))
+            var productqueryable = context.Products.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(productFilterDto.brand))
+            {
+                productqueryable = productqueryable.Where(p => p.Brand.Contains(productFilterDto.brand));
+            }
+            if (!string.IsNullOrWhiteSpace(productFilterDto.type))
+            {
+                productqueryable = productqueryable.Where(p => p.Type.Contains(productFilterDto.type));
+                
+            }
+            if (!string.IsNullOrWhiteSpace(productFilterDto.name))
+            {
+                productqueryable = productqueryable.Where(p => p.Name.Contains(productFilterDto.name));
+            }
             
-                queryable = queryable.Where(p => p.Brand == brand);
-            if (!string.IsNullOrWhiteSpace(type))
-                queryable = queryable.Where(p => p.Type == type);
-            
-                queryable = sort switch
-                {
-                    "priceAsc" => queryable.OrderBy(p => p.Price),
-                    "priceDesc" => queryable.OrderByDescending(p => p.Price),
-                    _ => queryable.OrderBy(p => p.Name)
+            await HttpContext.InsertarParametrosPaginacionEncabecera(productqueryable);
+            var products =  await productqueryable.Paginar(productFilterDto.Pagination)
+                .ProjectTo<ProductDto>(mapper.ConfigurationProvider).ToListAsync();
+            return products;
 
-                };
-
-            
-
-            return await queryable.ToListAsync();
 
         }
+        [HttpGet("All")]
+        [OutputCache(Tags = [cacheTag])]
+        public async Task<List<ProductDto>> Get()
+        {
+            return await context.Products.OrderBy(p =>p.Name).ProjectTo<ProductDto>(mapper.ConfigurationProvider).ToListAsync();
+        }
+
+        //[HttpGet("Filter")]
+        //[OutputCache(Tags = [cacheTag])]
+        //public async Task<IReadOnlyList<Product>> GetProducts([FromQuery] string? brand,string? type,string? sort)
+        //{
+        //    var queryable = context.Products.AsQueryable();
+
+        //    if (!string.IsNullOrWhiteSpace(brand))
+
+        //        queryable = queryable.Where(p => p.Brand == brand);
+        //    if (!string.IsNullOrWhiteSpace(type))
+        //        queryable = queryable.Where(p => p.Type == type);
+
+        //        queryable = sort switch
+        //        {
+        //            "priceAsc" => queryable.OrderBy(p => p.Price),
+        //            "priceDesc" => queryable.OrderByDescending(p => p.Price),
+        //            _ => queryable.OrderBy(p => p.Name)
+
+        //        };
+
+
+
+        //    return await queryable.ToListAsync();
+
+        //}
 
 
 
