@@ -131,7 +131,15 @@ namespace ecommerce_api.Controllers
         {
             return await context.Products.OrderBy(p =>p.Name).ProjectTo<ProductDto>(mapper.ConfigurationProvider).ToListAsync();
         }
+        [HttpGet("List")]
+        public async Task<List<ProductDto>>Get([FromQuery] PaginationDto pagination)
+        {
+            var queryble = context.Products.AsQueryable();
+            await HttpContext.InsertarParametrosPaginacionEncabecera(queryble);
+            return await queryble.OrderBy(p => p.Name).Paginar(pagination).ProjectTo<ProductDto>
+                (mapper.ConfigurationProvider).ToListAsync();
 
+        }
         //[HttpGet("Filter")]
         //[OutputCache(Tags = [cacheTag])]
         //public async Task<IReadOnlyList<Product>> GetProducts([FromQuery] string? brand,string? type,string? sort)
