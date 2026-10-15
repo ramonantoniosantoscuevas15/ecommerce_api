@@ -13,9 +13,9 @@ namespace ecommerce_api.Specifications
 
         public Expression<Func<T, bool>>? Criteria => criteria;
 
-        public Expression<Func<T, object>>? OrderBy => throw new NotImplementedException();
+        public Expression<Func<T, object>>? OrderBy { get; private set; }
 
-        public Expression<Func<T, object>>? OrderByDescending => throw new NotImplementedException();
+        public Expression<Func<T, object>>? OrderByDescending { get; private set; }
 
         public List<Expression<Func<T, object>>> Includes => throw new NotImplementedException();
 
@@ -32,6 +32,15 @@ namespace ecommerce_api.Specifications
         public IQueryable<T> ApplyCriteria(IQueryable<T> query)
         {
             throw new NotImplementedException();
+        }
+
+        protected void AddOrderBy(Expression<Func<T, object>> orderByExpression)
+        {
+            OrderBy = orderByExpression;
+        }
+        protected void AddOrderByDescending(Expression<Func<T, object>> orderByDescExpression)
+        {
+            OrderByDescending = orderByDescExpression;
         }
     }
 }
