@@ -1,5 +1,6 @@
 using ecommerce_api;
 using ecommerce_api.Interfaces;
+using ecommerce_api.MiddleWare;
 using ecommerce_api.Repositorios;
 using ecommerce_api.Servicios;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,9 @@ builder.Services.AddOutputCache(opciones =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -58,8 +62,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseAuthorization();
+app.UseMiddleware<ExeceptionMiddleware>();
 app.UseCors();
-
 app.MapControllers();
+
+
 
 app.Run();

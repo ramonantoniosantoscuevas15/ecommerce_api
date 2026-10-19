@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ecommerce_api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class BugController : ControllerBase
     {
         [HttpGet("unauthorized")]
@@ -29,7 +31,7 @@ namespace ecommerce_api.Controllers
             throw new Exception("This is a server error");
         }
 
-        [HttpGet("validationerror")]
+        [HttpPost("validationerror")]
         public IActionResult GetValidationError(Product product)
         {
             return Ok();
