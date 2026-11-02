@@ -24,7 +24,7 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddTransient<ILocalFileStorage, LocalFileStorage>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-var origenesPermitidos = builder.Configuration.GetValue<string>("origenesPermitidos")!.Split(",https://localhost:5000");
+var origenesPermitidos = builder.Configuration.GetValue<string>("origenesPermitidos")!.Split(",");
 //var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(opciones => {
     opciones.AddDefaultPolicy( configuracion=>
