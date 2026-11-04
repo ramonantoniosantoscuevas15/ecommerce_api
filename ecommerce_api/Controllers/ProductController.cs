@@ -14,165 +14,236 @@ namespace ecommerce_api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ProductController: ControllerBase
+    public  class ProductController(IGenericRepository<Product> repo, ILocalFileStorage localFileStorage) : ControllerBase
     {
-        private readonly AplicationBDContext context;
-        private readonly IMapper mapper;
-        private readonly IOutputCacheStore outputCacheStore;
-        private readonly ILocalFileStorage localFileStorage;
-        private const string cacheTag = "products";
+        private readonly ILocalFileStorage localFileStorage = localFileStorage;
         private readonly string contenedor = "products";
+        
 
-        public ProductController(AplicationBDContext context,IMapper mapper,IOutputCacheStore outputCacheStore,
-            ILocalFileStorage localFileStorage)
+        [HttpGet]
+        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(string? brand,string?type,string?sort) 
         {
-            this.context = context;
-            this.mapper = mapper;
-            this.outputCacheStore = outputCacheStore;
-            this.localFileStorage = localFileStorage;
+            return Ok(await repo.ListAllAsync());
         }
-        [HttpGet("{id:int}",Name = "ObtenerProductoPorId")]
-        [OutputCache(Tags = [cacheTag])]
-        public async Task<ActionResult<ProductDto>> Get(int id)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var product = await context.Products.ProjectTo
-                <ProductDto>(mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync(p => p.Id == id);
-            if(product == null)
+            var product = await repo.GetByIdAsync(id);
+            if (product == null)
             {
                 return NotFound();
+
             }
             return product;
         }
         [HttpPost]
-        public async Task<IActionResult> Post([FromForm] CreateProductDto createProductDto)
+        public async Task<ActionResult<Product>> CreateProduct([FromBody] Product product)
         {
-            var product = mapper.Map<Product>(createProductDto);
-            if(createProductDto.PictureUrl is not null)
+            repo.Add(product);
+            if(await repo.SaveAllAsync())
             {
-                var url = await localFileStorage.Almacenar(contenedor, createProductDto.PictureUrl);
-                product.PictureUrl = url;
+                return CreatedAtAction("GetProduct", new { id = product.Id }, product);
+
             }
-            context.Add(product);
-            await context.SaveChangesAsync();
-            await outputCacheStore.EvictByTagAsync(cacheTag,default);
-            return CreatedAtRoute("ObtenerProductoPorId", new { id = product.Id }, product);
+            return BadRequest("Problemas al crear el producto");
+
         }
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Put(int id, [FromForm] CreateProductDto createProductDto)
+        public async Task<ActionResult> UpdatedProduct(int id,Product product)
         {
-            var product = await context.Products.FirstOrDefaultAsync(p => p.Id == id);
-            if(product == null)
-            {
-                return NotFound();
-            }
-            product = mapper.Map(createProductDto, product);
+            if (product.Id != id || !ProductExists(id))
+                return BadRequest("No se puede actualizar el producto");
+            repo.Update(product);
 
-            if(createProductDto.PictureUrl is not null)
+            if(await repo.SaveAllAsync())
             {
-                product.PictureUrl = await localFileStorage.Editar(contenedor, product.PictureUrl, createProductDto.PictureUrl);
+                return NoContent();
             }
-            await context.SaveChangesAsync();
-            await outputCacheStore.EvictByTagAsync(cacheTag,default);
-            return NoContent();
+            return BadRequest("Problemas al actualizar el producto");
         }
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+
+        public async Task<ActionResult> DeleteProduct(int id)
         {
-            var deleteproduct = await context.Products.Where(p => p.Id == id).ExecuteDeleteAsync();
-            if(deleteproduct == 0)
+            var product = await repo.GetByIdAsync(id);
+
+            if (product == null) return NotFound();
+
+            repo.Remove(product);
+
+            if(await repo.SaveAllAsync())
             {
-                return NotFound();
+                return NoContent();
             }
             
-            await outputCacheStore.EvictByTagAsync(cacheTag,default);
-            return NoContent();
-
+            return BadRequest("Problemas al eliminar el producto");
         }
-        [HttpGet("Type")]
-        public async Task<ActionResult<List<string>>> GetTypes()
+
+        private bool ProductExists(int id)
         {
-            return await context.Products.Select(p => p.Type).Distinct().ToListAsync();
+            return repo.Exists(id);
         }
-        [HttpGet("Brand")]
-        public async Task<ActionResult<List<string>>> GetBrands()
-        {
-            return await context.Products.Select(p => p.Brand).Distinct().ToListAsync();
-        }
-        [HttpGet("Filter")]
-        [OutputCache(Tags = [cacheTag])]
-        public async Task<List<ProductDto>>Filter([FromQuery] ProductFilterDto productFilterDto)
-        {
-            var productqueryable = context.Products.AsQueryable();
-            if (!string.IsNullOrWhiteSpace(productFilterDto.brand))
-            {
-                productqueryable = productqueryable.Where(p => p.Brand.Contains(productFilterDto.brand));
-            }
-            if (!string.IsNullOrWhiteSpace(productFilterDto.type))
-            {
-                productqueryable = productqueryable.Where(p => p.Type.Contains(productFilterDto.type));
-                
-            }
-            if (!string.IsNullOrWhiteSpace(productFilterDto.name))
-            {
-                productqueryable = productqueryable.Where(p => p.Name.Contains(productFilterDto.name));
-            }
-            
-            await HttpContext.InsertarParametrosPaginacionEncabecera(productqueryable);
-            var products =  await productqueryable.Paginar(productFilterDto.Pagination)
-                .ProjectTo<ProductDto>(mapper.ConfigurationProvider).ToListAsync();
-            return products;
-
-
-        }
-        [HttpGet("All")]
-        [OutputCache(Tags = [cacheTag])]
-        public async Task<List<ProductDto>> Get()
-        {
-            return await context.Products.OrderBy(p =>p.Name).ProjectTo<ProductDto>(mapper.ConfigurationProvider).ToListAsync();
-        }
-        [HttpGet("List")]
-        public async Task<List<ProductDto>>Get([FromQuery] PaginationDto pagination)
-        {
-            var queryble = context.Products.AsQueryable();
-            await HttpContext.InsertarParametrosPaginacionEncabecera(queryble);
-            return await queryble.OrderBy(p => p.Name).Paginar(pagination).ProjectTo<ProductDto>
-                (mapper.ConfigurationProvider).ToListAsync();
-
-        }
-        //[HttpGet("Filter")]
-        //[OutputCache(Tags = [cacheTag])]
-        //public async Task<IReadOnlyList<Product>> GetProducts([FromQuery] string? brand,string? type,string? sort)
-        //{
-        //    var queryable = context.Products.AsQueryable();
-
-        //    if (!string.IsNullOrWhiteSpace(brand))
-
-        //        queryable = queryable.Where(p => p.Brand == brand);
-        //    if (!string.IsNullOrWhiteSpace(type))
-        //        queryable = queryable.Where(p => p.Type == type);
-
-        //        queryable = sort switch
-        //        {
-        //            "priceAsc" => queryable.OrderBy(p => p.Price),
-        //            "priceDesc" => queryable.OrderByDescending(p => p.Price),
-        //            _ => queryable.OrderBy(p => p.Name)
-
-        //        };
-
-
-
-        //    return await queryable.ToListAsync();
-
-        //}
-
-
-
-
-
-
-
-
-
     }
+    
+    //public class ProductController: ControllerBase
+    //{
+    //    private readonly AplicationBDContext context;
+    //    private readonly IMapper mapper;
+    //    private readonly IOutputCacheStore outputCacheStore;
+    //    private readonly ILocalFileStorage localFileStorage;
+    //    private const string cacheTag = "products";
+    //    private readonly string contenedor = "products";
+
+    //    public ProductController(AplicationBDContext context,IMapper mapper,IOutputCacheStore outputCacheStore,
+    //        ILocalFileStorage localFileStorage)
+    //    {
+    //        this.context = context;
+    //        this.mapper = mapper;
+    //        this.outputCacheStore = outputCacheStore;
+    //        this.localFileStorage = localFileStorage;
+    //    }
+    //    [HttpGet("{id:int}",Name = "ObtenerProductoPorId")]
+    //    [OutputCache(Tags = [cacheTag])]
+    //    public async Task<ActionResult<ProductDto>> Get(int id)
+    //    {
+    //        var product = await context.Products.ProjectTo
+    //            <ProductDto>(mapper.ConfigurationProvider)
+    //            .FirstOrDefaultAsync(p => p.Id == id);
+    //        if(product == null)
+    //        {
+    //            return NotFound();
+    //        }
+    //        return product;
+    //    }
+    //    [HttpPost]
+    //    public async Task<IActionResult> Post([FromForm] CreateProductDto createProductDto)
+    //    {
+    //        var product = mapper.Map<Product>(createProductDto);
+    //        if(createProductDto.PictureUrl is not null)
+    //        {
+    //            var url = await localFileStorage.Almacenar(contenedor, createProductDto.PictureUrl);
+    //            product.PictureUrl = url;
+    //        }
+    //        context.Add(product);
+    //        await context.SaveChangesAsync();
+    //        await outputCacheStore.EvictByTagAsync(cacheTag,default);
+    //        return CreatedAtRoute("ObtenerProductoPorId", new { id = product.Id }, product);
+    //    }
+    //    [HttpPut("{id:int}")]
+    //    public async Task<IActionResult> Put(int id, [FromForm] CreateProductDto createProductDto)
+    //    {
+    //        var product = await context.Products.FirstOrDefaultAsync(p => p.Id == id);
+    //        if(product == null)
+    //        {
+    //            return NotFound();
+    //        }
+    //        product = mapper.Map(createProductDto, product);
+
+    //        if(createProductDto.PictureUrl is not null)
+    //        {
+    //            product.PictureUrl = await localFileStorage.Editar(contenedor, product.PictureUrl, createProductDto.PictureUrl);
+    //        }
+    //        await context.SaveChangesAsync();
+    //        await outputCacheStore.EvictByTagAsync(cacheTag,default);
+    //        return NoContent();
+    //    }
+    //    [HttpDelete("{id:int}")]
+    //    public async Task<IActionResult> Delete(int id)
+    //    {
+    //        var deleteproduct = await context.Products.Where(p => p.Id == id).ExecuteDeleteAsync();
+    //        if(deleteproduct == 0)
+    //        {
+    //            return NotFound();
+    //        }
+            
+    //        await outputCacheStore.EvictByTagAsync(cacheTag,default);
+    //        return NoContent();
+
+    //    }
+    //    [HttpGet("Type")]
+    //    public async Task<ActionResult<List<string>>> GetTypes()
+    //    {
+    //        return await context.Products.Select(p => p.Type).Distinct().ToListAsync();
+    //    }
+    //    [HttpGet("Brand")]
+    //    public async Task<ActionResult<List<string>>> GetBrands()
+    //    {
+    //        return await context.Products.Select(p => p.Brand).Distinct().ToListAsync();
+    //    }
+    //    [HttpGet("Filter")]
+    //    [OutputCache(Tags = [cacheTag])]
+    //    public async Task<List<ProductDto>>Filter([FromQuery] ProductFilterDto productFilterDto)
+    //    {
+    //        var productqueryable = context.Products.AsQueryable();
+    //        if (!string.IsNullOrWhiteSpace(productFilterDto.brand))
+    //        {
+    //            productqueryable = productqueryable.Where(p => p.Brand.Contains(productFilterDto.brand));
+    //        }
+    //        if (!string.IsNullOrWhiteSpace(productFilterDto.type))
+    //        {
+    //            productqueryable = productqueryable.Where(p => p.Type.Contains(productFilterDto.type));
+                
+    //        }
+    //        if (!string.IsNullOrWhiteSpace(productFilterDto.name))
+    //        {
+    //            productqueryable = productqueryable.Where(p => p.Name.Contains(productFilterDto.name));
+    //        }
+            
+    //        await HttpContext.InsertarParametrosPaginacionEncabecera(productqueryable);
+    //        var products =  await productqueryable.Paginar(productFilterDto.Pagination)
+    //            .ProjectTo<ProductDto>(mapper.ConfigurationProvider).ToListAsync();
+    //        return products;
+
+
+    //    }
+    //    [HttpGet("All")]
+    //    [OutputCache(Tags = [cacheTag])]
+    //    public async Task<List<ProductDto>> Get()
+    //    {
+    //        return await context.Products.OrderBy(p =>p.Name).ProjectTo<ProductDto>(mapper.ConfigurationProvider).ToListAsync();
+    //    }
+    //    [HttpGet("List")]
+    //    public async Task<List<ProductDto>>Get([FromQuery] PaginationDto pagination)
+    //    {
+    //        var queryble = context.Products.AsQueryable();
+    //        await HttpContext.InsertarParametrosPaginacionEncabecera(queryble);
+    //        return await queryble.OrderBy(p => p.Name).Paginar(pagination).ProjectTo<ProductDto>
+    //            (mapper.ConfigurationProvider).ToListAsync();
+
+    //    }
+    //    //[HttpGet("Filter")]
+    //    //[OutputCache(Tags = [cacheTag])]
+    //    //public async Task<IReadOnlyList<Product>> GetProducts([FromQuery] string? brand,string? type,string? sort)
+    //    //{
+    //    //    var queryable = context.Products.AsQueryable();
+
+    //    //    if (!string.IsNullOrWhiteSpace(brand))
+
+    //    //        queryable = queryable.Where(p => p.Brand == brand);
+    //    //    if (!string.IsNullOrWhiteSpace(type))
+    //    //        queryable = queryable.Where(p => p.Type == type);
+
+    //    //        queryable = sort switch
+    //    //        {
+    //    //            "priceAsc" => queryable.OrderBy(p => p.Price),
+    //    //            "priceDesc" => queryable.OrderByDescending(p => p.Price),
+    //    //            _ => queryable.OrderBy(p => p.Name)
+
+    //    //        };
+
+
+
+    //    //    return await queryable.ToListAsync();
+
+    //    //}
+
+
+
+
+
+
+
+
+
+    //}
 }
