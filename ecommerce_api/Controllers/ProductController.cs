@@ -4,6 +4,7 @@ using ecommerce_api.DTOs;
 using ecommerce_api.Entidades;
 using ecommerce_api.Interfaces;
 using ecommerce_api.Servicios;
+using ecommerce_api.Specifications;
 using ecommerce_api.Utilidades;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
@@ -14,16 +15,17 @@ namespace ecommerce_api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public  class ProductController(IGenericRepository<Product> repo, ILocalFileStorage localFileStorage) : ControllerBase
+    public  class ProductController(IGenericRepository<Product> repo) : ControllerBase
     {
-        private readonly ILocalFileStorage localFileStorage = localFileStorage;
-        private readonly string contenedor = "products";
+        
         
 
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(string? brand,string?type,string?sort) 
         {
-            return Ok(await repo.ListAllAsync());
+            var spec = new ProductSpecification (brand,type,sort);
+            var products = await repo.ListAsync(spec);
+            return Ok(products);
         }
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
@@ -78,6 +80,8 @@ namespace ecommerce_api.Controllers
             
             return BadRequest("Problemas al eliminar el producto");
         }
+
+
 
         private bool ProductExists(int id)
         {
