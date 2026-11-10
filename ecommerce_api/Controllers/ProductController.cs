@@ -81,6 +81,22 @@ namespace ecommerce_api.Controllers
             return BadRequest("Problemas al eliminar el producto");
         }
 
+        [HttpGet("brand")]
+        public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
+        {
+            var spec = new BrandListSpecification();
+
+            return Ok(await repo.ListAsync(spec));
+        }
+
+        [HttpGet("type")]
+        public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
+        {
+            var spec = new TypeListSpecification();
+
+            return Ok(await repo.ListAsync(spec));
+        }
+
 
 
         private bool ProductExists(int id)

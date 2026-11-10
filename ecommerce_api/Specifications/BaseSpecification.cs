@@ -21,7 +21,7 @@ namespace ecommerce_api.Specifications
 
         public List<string> IncludeStrings => throw new NotImplementedException();
 
-        public bool IsDistinct => throw new NotImplementedException();
+        public bool IsDistinct { get; private set; }
 
         public int Take => throw new NotImplementedException();
 
@@ -42,10 +42,18 @@ namespace ecommerce_api.Specifications
         {
             OrderByDescending = orderByDescExpression;
         }
+        protected void ApplyDistinct()
+        {
+            IsDistinct = true;
+        }
     }
     public class BaseSpecification<T, TResult>(Expression<Func<T, bool>> criteria) :
         BaseSpecification<T>(criteria), ISpecification<T, TResult>
     {
+        protected BaseSpecification() : this(null!)
+        {
+
+        }
         public Expression<Func<T, TResult>>? Select  {get; private set;}
 
         protected void AddSelect(Expression<Func<T, TResult>> selectExpresion)
