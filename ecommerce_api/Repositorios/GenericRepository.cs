@@ -12,9 +12,12 @@ namespace ecommerce_api.Repositorios
             context.Set<T>().Add(entity);
         }
 
-        public Task<int> CountAsync(ISpecification<T> spec)
+        public async Task<int> CountAsync(ISpecification<T> spec)
         {
-            throw new NotImplementedException();
+           var query = context.Set<T>().AsQueryable();
+            query = spec.ApplyCriteria(query);
+
+            return await query.CountAsync();    
         }
 
         public bool Exists(int id)

@@ -23,15 +23,20 @@ namespace ecommerce_api.Specifications
 
         public bool IsDistinct { get; private set; }
 
-        public int Take => throw new NotImplementedException();
+        public int Take { get; private set; }
 
-        public int Skip => throw new NotImplementedException();
+        public int Skip { get; private set; }
 
-        public bool IspagingEnabled => throw new NotImplementedException();
+
+        public bool IsPagingEnabled { get; private set; }
 
         public IQueryable<T> ApplyCriteria(IQueryable<T> query)
         {
-            throw new NotImplementedException();
+            if (Criteria != null)
+            {
+                query = query.Where(Criteria);
+            }
+             return query;  
         }
 
         protected void AddOrderBy(Expression<Func<T, object>> orderByExpression)
@@ -45,6 +50,13 @@ namespace ecommerce_api.Specifications
         protected void ApplyDistinct()
         {
             IsDistinct = true;
+        }
+
+        protected void ApplyPaging(int skip, int take)
+        {
+            Skip = skip;
+            Take = take;
+            IsPagingEnabled = true;
         }
     }
     public class BaseSpecification<T, TResult>(Expression<Func<T, bool>> criteria) :

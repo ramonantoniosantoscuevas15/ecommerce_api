@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using ecommerce_api.DTOs;
 using ecommerce_api.Entidades;
 using ecommerce_api.Interfaces;
+using ecommerce_api.RequestHelpers;
 using ecommerce_api.Servicios;
 using ecommerce_api.Specifications;
 using ecommerce_api.Utilidades;
@@ -13,20 +14,19 @@ using System.Linq;
 
 namespace ecommerce_api.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public  class ProductController(IGenericRepository<Product> repo) : ControllerBase
+    
+    public  class ProductController(IGenericRepository<Product> repo) : BaseApiController
     {
         
         
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(string? brand,string?type,string?sort) 
+        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts([FromQuery]ProductSpecParams specParams) 
         {
-            var spec = new ProductSpecification (brand,type,sort);
-            var products = await repo.ListAsync(spec);
-            return Ok(products);
-        }
+            var spec = new ProductSpecification (specParams);
+
+            return await CreatePagedResult(repo, spec, specParams.PageIndex, specParams.PageSize);
+        } 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
